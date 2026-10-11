@@ -139,36 +139,33 @@ const Composer: FC = () => {
 };
 
 const GrokModelPicker: FC = () => {
-  const [text, setText] = useState("Schema");
-  const [draft, setDraft] = useState(text);
+  const [draft, setDraft] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setDraft(window.localStorage.getItem("db-schema") ?? "");
+  }, []);
 
   useEffect(() => {
     if (isOpen) inputRef.current?.focus();
   }, [isOpen]);
 
-  const submitText = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextText = draft.trim();
-    if (!nextText) return;
-    setText(nextText);
-    setIsOpen(false);
+  const updateSchema = (value: string) => {
+    setDraft(value);
+    window.localStorage.setItem("db-schema", value);
   };
 
   return (
     <DropdownMenu
       open={isOpen}
-      onOpenChange={(open) => {
-        if (open) setDraft(text);
-        setIsOpen(open);
-      }}
+      onOpenChange={setIsOpen}
     >
       <DropdownMenuTrigger className="mb-0.5 flex h-9 shrink-0 items-center gap-2 rounded-full px-2.5 text-foreground hover:bg-accent">
         <Zap width={18} height={18} className="shrink-0" />
         <div className="flex items-center gap-1 overflow-hidden transition-[max-width,opacity] duration-300 group-data-[empty=false]/composer:max-w-0 group-data-[empty=false]/composer:opacity-0 group-data-[empty=true]/composer:max-w-32 group-data-[empty=true]/composer:opacity-100">
           <span className="text-sm font-semibold whitespace-nowrap">
-            {text}
+            Schema
           </span>
           <ChevronDownIcon width={16} height={16} className="shrink-0" />
         </div>
@@ -177,7 +174,7 @@ const GrokModelPicker: FC = () => {
         align="end"
         className="w-[min(32rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
       >
-        <form onSubmit={submitText}>
+        <div>
           <label
             htmlFor="grok-text-input"
             className="mb-2 block text-xs font-medium text-muted-foreground"
@@ -187,13 +184,14 @@ const GrokModelPicker: FC = () => {
           <textarea
             ref={inputRef}
             id="grok-text-input"
-            onChange={(event) => setDraft(event.target.value)}
+            value={draft}
+            onChange={(event) => updateSchema(event.target.value)}
             onKeyDown={(event) => event.stopPropagation()}
             onClick={(event) => event.stopPropagation()}
             rows={8}
             className="min-h-48 w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
           />
-        </form>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -229,6 +227,13 @@ const ChatMessage: FC = () => {
 
       <AuiIf condition={(s) => s.message.role === "assistant"}>
         <div className="flex flex-col items-start">
+          <AuiIf condition={(s) => s.thread.isRunning}>
+            <span
+              role="status"
+              aria-label="Generating"
+              className="mb-2 size-2 animate-pulse rounded-full bg-primary"
+            />
+          </AuiIf>
           <div className="w-full max-w-none">
             <div className="prose prose-sm dark:prose-invert prose-li:my-1 prose-ol:my-1 prose-p:my-2 prose-ul:my-1 wrap-break-word text-foreground">
               <MessagePrimitive.Parts>
