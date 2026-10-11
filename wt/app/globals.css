@@ -1,0 +1,170 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant data-open (&:where([data-state="open"], [data-open]:not([data-open="false"])));
+@custom-variant data-closed (&:where([data-state="closed"], [data-closed]:not([data-closed="false"])));
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  @keyframes collapsible-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(
+        --radix-collapsible-content-height,
+        var(--collapsible-panel-height, auto)
+      );
+    }
+  }
+  @keyframes collapsible-up {
+    from {
+      height: var(
+        --radix-collapsible-content-height,
+        var(--collapsible-panel-height, auto)
+      );
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-sidebar-background: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-scrollbar-thumb: var(--scrollbar-thumb);
+  --color-scrollbar-thumb-hover: var(--scrollbar-thumb-hover);
+}
+
+:root {
+  color-scheme: light;
+  --background: #fdfdfd;
+  --foreground: #0d0d0d;
+  --muted: #f0f0f0;
+  --muted-foreground: #6b6b6b;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #d0d0d0;
+  --primary: #0d0d0d;
+  --primary-foreground: #ffffff;
+  --accent: #f0f0f0;
+  --accent-foreground: #0d0d0d;
+  --popover: #ffffff;
+  --popover-foreground: #0d0d0d;
+  --sidebar-background: #f8f8f8;
+  --sidebar-foreground: #0d0d0d;
+  --sidebar-muted: #f0f0f0;
+  --sidebar-muted-foreground: #6b6b6b;
+  --sidebar-border: #e5e5e5;
+  --sidebar-input: #e5e5e5;
+  --sidebar-ring: #d0d0d0;
+  --sidebar-primary: #0d0d0d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0f0f0;
+  --sidebar-accent-foreground: #0d0d0d;
+  --sidebar-popover: #ffffff;
+  --sidebar-popover-foreground: #0d0d0d;
+  --scrollbar-thumb: #d4d4d4;
+  --scrollbar-thumb-hover: #b8b8b8;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --muted: #1a1a1a;
+  --muted-foreground: #9a9a9a;
+  --border: #2a2a2a;
+  --input: #2a2a2a;
+  --ring: #3a3a3a;
+  --primary: #ffffff;
+  --primary-foreground: #0d0d0d;
+  --accent: #2a2a2a;
+  --accent-foreground: #fafafa;
+  --popover: #1a1a1a;
+  --popover-foreground: #fafafa;
+  --sidebar-background: #161614;
+  --sidebar-foreground: #ffffff;
+  --sidebar-muted: #252525;
+  --sidebar-muted-foreground: #9a9a9a;
+  --sidebar-border: #2a2a2a;
+  --sidebar-input: #2a2a2a;
+  --sidebar-ring: #3a3a3a;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #161614;
+  --sidebar-accent: #2a2a2a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-popover: #1a1a1a;
+  --sidebar-popover-foreground: #ffffff;
+  --scrollbar-thumb: #3a3a3a;
+  --scrollbar-thumb-hover: #525252;
+}
+
+.grok-sidebar {
+  --background: var(--sidebar-background);
+  --foreground: var(--sidebar-foreground);
+  --muted: var(--sidebar-muted);
+  --muted-foreground: var(--sidebar-muted-foreground);
+  --border: var(--sidebar-border);
+  --input: var(--sidebar-input);
+  --ring: var(--sidebar-ring);
+  --primary: var(--sidebar-primary);
+  --primary-foreground: var(--sidebar-primary-foreground);
+  --accent: var(--sidebar-accent);
+  --accent-foreground: var(--sidebar-accent-foreground);
+  --popover: var(--sidebar-popover);
+  --popover-foreground: var(--sidebar-popover-foreground);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+button, input, textarea, select {
+  font: inherit;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-color: var(--scrollbar-thumb);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
