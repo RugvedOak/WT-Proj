@@ -25,7 +25,7 @@ export async function POST(req: Request) {
           type: "text-delta",
           id: textId,
           delta:
-            "This starter is running without OPENAI_API_KEY. Add one to .env.local to enable live AI responses.",
+            "Backend URL is not configured.",
         });
         writer.write({ type: "text-end", id: textId });
         writer.write({ type: "finish-step" });

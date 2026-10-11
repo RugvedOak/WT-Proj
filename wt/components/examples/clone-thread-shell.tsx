@@ -9,6 +9,7 @@ import {
 } from "@/components/assistant-ui/elements/thread-list.aui";
 import { TooltipIconButton } from "@/components/assistant-ui/elements/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -23,8 +24,15 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAuiState } from "@assistant-ui/react";
-import { MenuIcon, PanelLeftIcon } from "lucide-react";
-import { useState, type FC, type MouseEvent, type ReactNode } from "react";
+import { Dialog } from "@base-ui/react/dialog";
+import { MenuIcon, PanelLeftIcon, ServerIcon } from "lucide-react";
+import {
+  useEffect,
+  useState,
+  type FC,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 
 type CloneThreadShellProps = {
   children: ReactNode;
@@ -54,7 +62,14 @@ export const CloneThreadShell: FC<CloneThreadShellProps> = ({
   const [internalCollapsed, setInternalCollapsed] = useState(true);
   const [internalMobileOpen, setInternalMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [backendUrl, setBackendUrl] = useState("");
+  const [backendUrlDraft, setBackendUrlDraft] = useState("");
+  const [backendUrlDialogOpen, setBackendUrlDialogOpen] = useState(false);
   const hasThreads = useAuiState((s) => s.threads.threadIds.length > 0);
+
+  useEffect(() => {
+    setBackendUrl(window.localStorage.getItem("backend-url") ?? "");
+  }, []);
 
   // A controlled value means the caller renders the chrome that drives it, so
   // the shell omits its own toggle / trigger and forwards changes instead.
@@ -71,6 +86,17 @@ export const CloneThreadShell: FC<CloneThreadShellProps> = ({
   const setMobileOpen = (open: boolean) => {
     if (!mobileControlled) setInternalMobileOpen(open);
     onMobileSidebarOpenChange?.(open);
+  };
+  const openBackendUrlDialog = () => {
+    setBackendUrlDraft(backendUrl);
+    setBackendUrlDialogOpen(true);
+  };
+  const saveBackendUrl = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextBackendUrl = backendUrlDraft.trim();
+    window.localStorage.setItem("backend-url", nextBackendUrl);
+    setBackendUrl(nextBackendUrl);
+    setBackendUrlDialogOpen(false);
   };
 
   const closeMobileSidebarAfterNavigation = (
@@ -174,6 +200,21 @@ export const CloneThreadShell: FC<CloneThreadShellProps> = ({
             )}
           />
         </ThreadListRoot>
+        <div className="shrink-0 border-t border-border p-2">
+          <button
+            type="button"
+            aria-label="Set backend URL"
+            title="Set backend URL"
+            onClick={openBackendUrlDialog}
+            className={cn(
+              "flex h-9 w-full items-center gap-2 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+              sidebarCollapsed && "justify-center px-0",
+            )}
+          >
+            <ServerIcon className="size-4 shrink-0" />
+            {!sidebarCollapsed && <span>Set backend URL</span>}
+          </button>
+        </div>
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -203,10 +244,66 @@ export const CloneThreadShell: FC<CloneThreadShellProps> = ({
           >
             <ThreadList />
           </div>
+          <div className="shrink-0 border-t border-border p-2">
+            <button
+              type="button"
+              onClick={openBackendUrlDialog}
+              className="flex h-9 w-full items-center gap-2 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ServerIcon className="size-4 shrink-0" />
+              <span>Set backend URL</span>
+            </button>
+          </div>
         </SheetContent>
       </Sheet>
-
       <div className="min-w-0 flex-1 overflow-hidden">{children}</div>
+      <Dialog.Root
+        open={backendUrlDialogOpen}
+        onOpenChange={setBackendUrlDialogOpen}
+      >
+        <Dialog.Portal>
+          <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/40 supports-backdrop-filter:backdrop-blur-xs" />
+          <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-popover p-5 text-popover-foreground shadow-lg">
+            <Dialog.Title className="text-base font-semibold">
+              Set backend URL
+            </Dialog.Title>
+            <Dialog.Description className="mt-1 text-sm text-muted-foreground">
+              Enter the URL for your backend.
+            </Dialog.Description>
+            <form onSubmit={saveBackendUrl} className="mt-4 grid gap-4">
+              <label htmlFor="backend-url" className="sr-only">
+                Backend URL
+              </label>
+              <Input
+                id="backend-url"
+                type="text"
+                value={backendUrlDraft}
+                onChange={(event) => setBackendUrlDraft(event.target.value)}
+                placeholder="https://example.com"
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <Dialog.Close
+                  render={
+                    <button
+                      type="button"
+                      className="h-8 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      Cancel
+                    </button>
+                  }
+                />
+                <button
+                  type="submit"
+                  className="h-8 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 };

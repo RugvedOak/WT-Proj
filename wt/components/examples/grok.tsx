@@ -12,7 +12,6 @@ import {
 } from "@assistant-ui/react";
 import {
   ArrowUpIcon,
-  CheckIcon,
   ChevronDownIcon,
   CopyIcon,
   Database,
@@ -27,17 +26,16 @@ import {
   XIcon,
   Zap,
 } from "lucide-react";
-import { useEffect, useState, type FC } from "react";
+import { useEffect, useRef, useState, type FC } from "react";
 import { useAttachmentSrc } from "./use-attachment-src";
 import { MarkdownText } from "@/components/assistant-ui/elements/markdown-text";
 import { CloneThreadShell } from "./clone-thread-shell";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 export const Grok: FC = () => {
   const [isDark, setIsDark] = useState(false);
@@ -57,16 +55,12 @@ export const Grok: FC = () => {
 
   return (
     <CloneThreadShell>
-      <ThreadPrimitive.Root className="relative flex h-full flex-col items-stretch bg-background text-foreground px-4">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-          title={`Switch to ${isDark ? "light" : "dark"} mode`}
+      <ThreadPrimitive.Root className="relative flex h-full flex-col items-stretch bg-background text-foreground ">
+        <div
           className="absolute top-3 right-4 z-10 flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+           <AnimatedThemeToggler />
+        </div>
 
         <AuiIf condition={(s) => s.thread.isEmpty}>
           <div className="flex h-full flex-col items-center justify-center">
@@ -79,15 +73,14 @@ export const Grok: FC = () => {
         </AuiIf>
 
         <AuiIf condition={(s) => s.thread.isEmpty === false}>
-          <ThreadPrimitive.Viewport className="flex grow flex-col overflow-y-scroll pt-16">
+          <ThreadPrimitive.Viewport
+            className="flex grow flex-col overflow-y-scroll pt-16"
+          >
             <ThreadPrimitive.Messages>
               {() => <ChatMessage />}
             </ThreadPrimitive.Messages>
           </ThreadPrimitive.Viewport>
           <Composer />
-          <p className="mx-auto w-full max-w-3xl pb-2 text-center text-xs text-muted-foreground">
-            SQLGPT can make mistakes. Verify important information.
-          </p>
         </AuiIf>
       </ThreadPrimitive.Root>
     </CloneThreadShell>
@@ -145,65 +138,62 @@ const Composer: FC = () => {
   );
 };
 
-const GROK_MODELS = [
-  {
-    id: "grok-4.7-fast",
-    name: "Fast",
-    description: "Default. Quick responses",
-    Icon: Zap,
-  },
-  {
-    id: "grok-4.7",
-    name: "Grok 4.7",
-    description: "Standard reasoning",
-    Icon: Moon,
-  },
-  {
-    id: "grok-4.7-think",
-    name: "Think",
-    description: "Multi-step reasoning",
-    Icon: Moon,
-  },
-];
-
 const GrokModelPicker: FC = () => {
-  const [model, setModel] = useState(GROK_MODELS[0]!.id);
-  const current = GROK_MODELS.find((item) => item.id === model) ?? GROK_MODELS[0]!;
-  const CurrentIcon = current.Icon;
+  const [text, setText] = useState("Schema");
+  const [draft, setDraft] = useState(text);
+  const [isOpen, setIsOpen] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isOpen) inputRef.current?.focus();
+  }, [isOpen]);
+
+  const submitText = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextText = draft.trim();
+    if (!nextText) return;
+    setText(nextText);
+    setIsOpen(false);
+  };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open) setDraft(text);
+        setIsOpen(open);
+      }}
+    >
       <DropdownMenuTrigger className="mb-0.5 flex h-9 shrink-0 items-center gap-2 rounded-full px-2.5 text-foreground hover:bg-accent">
-        <CurrentIcon width={18} height={18} className="shrink-0" />
+        <Zap width={18} height={18} className="shrink-0" />
         <div className="flex items-center gap-1 overflow-hidden transition-[max-width,opacity] duration-300 group-data-[empty=false]/composer:max-w-0 group-data-[empty=false]/composer:opacity-0 group-data-[empty=true]/composer:max-w-32 group-data-[empty=true]/composer:opacity-100">
           <span className="text-sm font-semibold whitespace-nowrap">
-            {current.name}
+            {text}
           </span>
           <ChevronDownIcon width={16} height={16} className="shrink-0" />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-60">
-        {GROK_MODELS.map(({ id, name, description, Icon }) => (
-          <DropdownMenuItem
-            key={id}
-            onClick={() => setModel(id)}
-            className="flex items-start gap-3"
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(32rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-3"
+      >
+        <form onSubmit={submitText}>
+          <label
+            htmlFor="grok-text-input"
+            className="mb-2 block text-xs font-medium text-muted-foreground"
           >
-            <span className="mt-0.5 flex size-4 items-center justify-center text-foreground">
-              {id === model ? <CheckIcon /> : <Icon width={14} height={14} />}
-            </span>
-            <span className="flex flex-1 flex-col">
-              <span className="text-foreground text-sm">{name}</span>
-              <span className="text-muted-foreground text-xs">
-                {description}
-              </span>
-            </span>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-muted-foreground text-sm">
-          Subscribe to SuperGrok
-        </DropdownMenuItem>
+            Paste DB Schema
+          </label>
+          <textarea
+            ref={inputRef}
+            id="grok-text-input"
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            rows={8}
+            className="min-h-48 w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -257,12 +247,7 @@ const ChatMessage: FC = () => {
               <ActionBarPrimitive.Copy className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
                 <CopyIcon width={16} height={16} />
               </ActionBarPrimitive.Copy>
-              <ActionBarPrimitive.FeedbackPositive className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                <ThumbsUp width={16} height={16} />
-              </ActionBarPrimitive.FeedbackPositive>
-              <ActionBarPrimitive.FeedbackNegative className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                <ThumbsDown width={16} height={16} />
-              </ActionBarPrimitive.FeedbackNegative>
+
               <MessageTimingDisplay />
             </ActionBarPrimitive.Root>
           </div>
